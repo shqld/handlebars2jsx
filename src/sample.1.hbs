@@ -1,0 +1,17 @@
+<div class="content__main{{#if article.hasRelatedContents}} content__main--has-related-articles{{/if}}{{~#if isShortVariation}} content__main--short{{/if}}"
+  {{#if giftStatus.isEnabled}} data-js-gift-enabled{{/if}}>
+  {{> gift-banner position="top" gift=giftStatus}} {{> cover-photo style='inline'}} {{> article/body}} {{#ifNot isLocked}}
+  {{> article/commentator-bottom}} {{/ifNot}} {{> open-app-link}} {{> paywall}} {{#ifNot hideRegistrationLink}} {{#ifNot
+  isLocked}} {{> gift-banner message="記事はいかがでしたか？" position="bottom" gift=giftStatus}} {{/ifNot}} {{/ifNot}} {{#ifAll articleUnlocked
+  limitation promotions.trial}}
+  <div data-paywall-trial aria-hidden="true">
+    {{> unlock-form--trial url='http://pr.nikkei.com/lp/dsr2_trial/?n_cid=DSPRM3664&waad=qx3wWC9G' showLockMessage=false}}
+  </div>
+  {{/ifAll}} {{#if worldcup2018}}
+  <div class="article-ad__mpu--bottom">
+    {{> advert/mpu desktop-target="3702_3454" mobile-target="3692_3434"}}
+  </div>
+  <div {{giftStatus.isEnabled}}></div>
+  {{/if}} {{#ifNot isLocked}} {{> share/article-bottom}} {{#if isGroupArticle}} {{> share/article-comments}} {{/if}} {{#ifNot
+  article.expired}} {{> related-contents limit=5 insideIframe=insideIframe}} {{/ifNot}} {{/ifNot}}
+</div>
