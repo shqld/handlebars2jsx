@@ -1,3 +1,6 @@
 <div class="content__main{{#if article.hasRelatedContents}} content__main--has-related-articles{{/if}}{{~#if isShortVariation}} content__main--short{{/if}}"
-  {{#if giftStatus.isEnabled}} data-js-gift-enabled{{/if}}>
+  {{#if giftStatus.isEnabled}} data-js-gift-enabled=true{{/if}}
+  data-js-gift-enabled={{#if giftStatus.isEnabled}}true{{/if}}
+  {{title}}
+  >
 </div>

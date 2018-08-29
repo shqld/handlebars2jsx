@@ -4,30 +4,19 @@ global.dump = require('dumper.js').dd
 
 const fs = require('fs')
 const handlebars = require('handlebars')
-const cheerio = require('cheerio')
 
 const parser = require('./nodes')
 const htmlParser = require('./html')
 
 const load = p => fs.readFileSync(require.resolve(p), 'utf8')
 
+/* Register built-in/user helpers & partials */
 handlebars.registerPartial('content', `{{title}}`)
 // handlebars.registerHelper('title', () => {})
 
 let hbs = load('./sample.hbs')
 
-hbs = htmlParser.parse(hbs)
-
-// const $ = cheerio.load(hbs)
-
-// log(
-//   Object.entries(
-//     $('body')
-//       .children()
-//       .first()
-//       .attr()
-//   )
-// )
+hbs = htmlParser.parse(hbs, handlebars)
 
 // const ast = handlebars.parse(hbs)
 // const parse = parser(handlebars)
