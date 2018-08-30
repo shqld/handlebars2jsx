@@ -1,5 +1,5 @@
 {
-  "name": "handlebars-jsx",
+  "name": "handlebars2jsx",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
@@ -7,12 +7,16 @@
     "camelcase": "^5.0.0",
     "cheerio": "^1.0.0-rc.2",
     "dumper.js": "^1.1.1",
-    "handlebars": "^4.0.11"
+    "handlebars": "^4.0.11",
+    "html-void-elements": "^1.0.3",
+    "htmlbars": "^0.14.24",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.3",
     "babel-preset-env": "^1.7.0",
-    "babel-preset-preact": "^1.1.0"
+    "babel-preset-preact": "^1.1.0",
+    "flow-bin": "^0.79.1"
   }
 }

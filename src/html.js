@@ -1,100 +1,93 @@
-const cheerio = require('cheerio')
+const genKey = require('uuid/v4')
+const voidElements = require('html-void-elements')
 
 const rTag = /<[A-z]+\s?([\s\S]*?)>/g
 const rStringWithStatement = /"([\s\S]*?{{[\s\S]*?}}[\s\S]*?)"/g
-const rBlockStatement = /{{.*?#\w+?\s?.+?}}([\s\S]*?)({{else}}[\s\S]*?)?{{\/.+?}}/g
+
+const rBlockStatement = /{{.*?#\w+?\s?.+?}}[\s\S]*?{{\/.+?}}/g
 const rMustacheStatement = /{{(.+?)}}/g
 
-const counter = () => {
-  let counter = 0
-  return () => counter++
-}
+const rEndTag = /<\/[A-z]+>/g
+const rVoidElements = new RegExp(
+  `<(${voidElements.join('|')})[\\s\\S]*?/?>`,
+  'g'
+)
 
-const getCount = counter()
+const mStartTag = '{{!-- HBS2JSX HTML_ELEMENT_START --}}'
+const mEndTag = '{{!-- HBS2JSX HTML_ELEMENT_END --}}'
+const wrapIgnored = ignored => `{{!-- HBS2JSX IGNORED ${ignored} --}}`
 
-function parse(html, handlebars) {
+function cleanse(html, handlebars) {
   html = html.replace(rTag, tag => {
-    const original = tag
     const buf = []
-    const statements = {}
 
-    // Remove strings temporarily
-    tag = tag.replace(rStringWithStatement, (string, inner) => {
-      buf.push([string, string])
-      return ''
+    tag = tag.replace(rStringWithStatement, (_, inner) => {
+      let modified = inner
+      modified = modified.replace(rBlockStatement, '$$$&')
+      modified = modified.replace(rMustacheStatement, '$$$&')
+
+      modified = `\{\`${modified}\`\}`
+
+      const key = genKey()
+      buf.push([key, modified])
+
+      return key
     })
 
-    tag = tag.replace(rBlockStatement, (block, inner) => {
-      const count = getCount()
-      const key = `statement-${count}`
-      statements[key] = block
-      buf.push([block, `${key}-${inner.trim()}`])
+    // Prevent handlebars from parsing incorrectly
+    tag = tag.replace(rBlockStatement, (block, offset) => {
+      const key = genKey()
 
-      return ''
+      const beforeIndex = offset - 1
+      if (beforeIndex >= 0 && tag[beforeIndex] === '=') {
+        buf.push([key, block])
+      } else {
+        buf.push([key, wrapIgnored(block)])
+      }
+
+      return key
     })
 
-    tag = tag.replace(rMustacheStatement, mustache => {
-      const count = getCount()
-      const key = `statement-${count}`
-      statements[key] = mustache
-      buf.push([mustache, key])
+    // Prevent handlebars from parsing incorrectly
+    tag = tag.replace(rMustacheStatement, (mustache, offset) => {
+      const key = genKey()
 
-      return ''
+      const beforeIndex = offset - 1
+      if (beforeIndex >= 0 && tag[beforeIndex] === '=') {
+        buf.push([key, mustache])
+      } else {
+        buf.push([key, wrapIgnored(mustache)])
+      }
+
+      return key
     })
 
-    tag = original
     buf.forEach(replacement => {
       tag = tag.replace(...replacement)
     })
 
-    const $ = cheerio.load(tag)
-
-    const tagAttrs = $('body')
-      .children()
-      .first()
-      .attr()
-
-    parseAttrTemplate(tagAttrs, statements, handlebars)
+    if (rVoidElements.test(tag)) {
+      tag = `${mStartTag}\n${tag}\n${mEndTag}`
+    } else {
+      tag = `${mStartTag}\n${tag}`
+    }
 
     return tag
   })
 
-  console.log(html)
-  console.log('=================================================')
+  html = html.replace(rEndTag, `$&\n${mEndTag}`)
+
+  // log(html)
+  // log('========================================================')
 
   return html
 }
 
-const kStatement = 'statement-'
+const rHtmlElement = /^<.+ .*>$/
 
-const parseAttrTemplate = (attrs, statements, handlebars) => {
-  const normalAttrs = {}
-  const dynamicAttrs = {}
-  let hasDynamicAttrs = false
-
-  Object.entries(attrs).forEach((k, v) => {
-    // if (v.startsWith(kStatement)) {
-    //   normalAttrs[k] = statements[v]
-    //   return
-    // }
-
-    // if (k!.startsWith(kStatement)) {
-
-    //   return
-    // }
-
-    hasDynamicAttrs = true
-
-    const ast = handlebars.parse(k)
-    dump(ast)
-
-    // Dynamic attribute
-    if (v) {
-      //
-    } else {
-      //
-    }
-  })
+function isElement(str) {
+  str = str.replace(/\n/g, '').trim()
+  return rHtmlElement.test(str)
 }
 
-module.exports = { parse }
+module.exports = { cleanse, isElement }

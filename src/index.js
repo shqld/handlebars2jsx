@@ -1,6 +1,5 @@
 global.log = console.log
 global.dump = require('dumper.js').dd
-// global.dump = obj => log(JSON.stringify(obj, null, 1))
 
 const fs = require('fs')
 const handlebars = require('handlebars')
@@ -16,21 +15,26 @@ handlebars.registerPartial('content', `{{title}}`)
 
 let hbs = load('./sample.hbs')
 
-hbs = htmlParser.parse(hbs, handlebars)
+hbs = htmlParser.cleanse(hbs, handlebars)
+log(hbs)
+log('=================================================================')
 
 // const ast = handlebars.parse(hbs)
+// // dump(ast)
 // const parse = parser(handlebars)
-
-// log(parse(ast))
-// dump(ast)
+// const jsx = parse(ast)
+// log('=================================================================')
+// log(jsx)
+// log('=================================================================')
 
 // dump(handlebars.partials)
 
 // const compile = handlebars.compile(hbs)
 // const html = compile({
-//   title: 'hello',
-//   ctx: {
-//     title: 'world',
+//   parentToo: 'parent',
+//   parentOnly: 'parent',
+//   child: {
+//     parentToo: 'child',
 //   },
 // })
 // log(html)
