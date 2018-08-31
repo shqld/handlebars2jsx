@@ -1,5 +1,6 @@
-const genKey = require('uuid/v4')
-const voidElements = require('html-void-elements')
+import genKey from 'uuid/v4'
+// @ts-ignore
+import voidElements from 'html-void-elements'
 
 const rTag = /<[A-z]+\s?([\s\S]*?)>/g
 const rStringWithStatement = /"([\s\S]*?{{[\s\S]*?}}[\s\S]*?)"/g
@@ -12,14 +13,15 @@ const rVoidElements = new RegExp(
   `<(${voidElements.join('|')})[\\s\\S]*?/?>`,
   'g'
 )
+const rSelfClosing = /(<\w+[\s\S]*?)\/?>/
 
 const mStartTag = '{{!-- HBS2JSX HTML_ELEMENT_START --}}'
 const mEndTag = '{{!-- HBS2JSX HTML_ELEMENT_END --}}'
-const wrapIgnored = ignored => `{{!-- HBS2JSX IGNORED ${ignored} --}}`
+const wrapIgnored = (ignored: string) => `{{!-- HBS2JSX IGNORED ${ignored} --}}`
 
-function cleanse(html, handlebars) {
+export function cleanse(html: string) {
   html = html.replace(rTag, tag => {
-    const buf = []
+    const buf: Array<[string, string]> = []
 
     tag = tag.replace(rStringWithStatement, (_, inner) => {
       let modified = inner
@@ -67,27 +69,19 @@ function cleanse(html, handlebars) {
     })
 
     if (rVoidElements.test(tag)) {
-      tag = `${mStartTag}\n${tag}\n${mEndTag}`
+      tag = tag.replace(rSelfClosing, '$1/>') // Make self-closing
+      tag = `${mStartTag}${tag}${mEndTag}`
     } else {
-      tag = `${mStartTag}\n${tag}`
+      tag = `${mStartTag}${tag}`
     }
 
     return tag
   })
 
-  html = html.replace(rEndTag, `$&\n${mEndTag}`)
+  html = html.replace(rEndTag, `$&${mEndTag}`)
 
   // log(html)
   // log('========================================================')
 
   return html
 }
-
-const rHtmlElement = /^<.+ .*>$/
-
-function isElement(str) {
-  str = str.replace(/\n/g, '').trim()
-  return rHtmlElement.test(str)
-}
-
-module.exports = { cleanse, isElement }
